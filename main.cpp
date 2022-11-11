@@ -1,7 +1,7 @@
 // Theme:	Project03: State Minimization
 // Name:	B10932017 Yu-Zhen Chang
 // Date: 		2022/10/29
-// Last Update: 2022/11/12 03:50
+// Last Update: 2022/11/12 03:53
 
 #include <iostream>
 #include <fstream>
@@ -83,19 +83,7 @@ int Bin2Dec(int input)
 	return input;
 }
 
-// test print all states
-void printStates()
-{
-	for(int i = 0; i < states.size(); i++)
-	{
-		if(states[i].removed) std::cout << "[removed] ";
-		std::cout << states[i].name << " : \n";
-		for(int j = 0; j < State::num; j++)
-			std::cout << "\t" << states[states[i].nextState[j]].name << " " << states[i].nextOutput[j] << "\n";
-	}
-}
-
-//check if state exists
+// check if state exists
 int findState(std::string now_state_name)
 {
 	int i = 0;
@@ -214,20 +202,10 @@ bool equalVector(std::vector<int> a, std::vector<int> b)
 	return true;
 }
 
-void printIncompatible(std::vector< std::vector<bool> > a)
-{
-	for(int i = 0; i < a.size(); i++)
-	{
-		for(int j = 0; j < a[i].size(); j++)
-			std::cout << (a[i][j] ? "X" : "-");
-		std::cout <<"\n";
-	}
-}
-
+// recursion to simplify incompatible table
 std::vector< std::vector<bool> > checkIncompatible
 	(std::vector< std::vector<bool> > incompatible)
 {
-	//printIncompatible(incompatible);
 	bool checkAgain = false;
 	// a(former state) vs b(latter)
 	for(int a = 0; a < statesSize; a++)
@@ -268,8 +246,6 @@ std::vector< std::vector<bool> > checkIncompatible
 			}
 		}
 	}
-	//std::cout << "---------after incom--------\n";
-	//printIncompatible(incompatible);
 
 	if(checkAgain)
 		return checkIncompatible(incompatible);
@@ -324,13 +300,13 @@ void StateMinimization()
 			}
 		}
 	}
-	//printStates();
 }
 
 
 //----------------------------------------------------
 // SAVE KISS & DOT FILES
 //----------------------------------------------------
+// save kiss file
 void SaveKISS(std::string kissName)
 {
 	std::ofstream kiss(kissName);
@@ -372,7 +348,7 @@ void SaveKISS(std::string kissName)
 	kiss.close();
 }
 
-//save dot file
+// save dot file
 void SaveDOT(std::string dotName)
 {
 	std::ofstream dot(dotName);
