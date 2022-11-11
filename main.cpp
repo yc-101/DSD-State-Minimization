@@ -34,6 +34,10 @@ public:
 int State::num = 0;
 int statesSize;
 
+int num_i, num_o;
+int num_p;
+std::string r; // ".r a"
+
 std::vector< State > states; // all of the states
 
 void ProcessKISS(std::ifstream&);
@@ -90,6 +94,8 @@ int main(int argc, char* argv[])
 	printStates();
 	StateMinimization();
 	//printStates();
+
+	SaveKISS("out.kiss");
 }
 
 // binary to decimal
@@ -119,9 +125,6 @@ void ProcessKISS(std::ifstream& kiss)
 {
 	std::string op;
 
-	int num_i, num_o;
-	int num_p;
-	std::string r; // ".r a"
 
 	while (!kiss.eof())
 	{
@@ -244,7 +247,16 @@ std::vector< std::vector<bool> > checkIncompatible
 		for(int b = a + 1; b < statesSize; b++)
 		{
 			if(incompatible[a][b - a - 1]) continue;
-			std::cout << states[a].name << " " << states[b].name << " 格:\n";
+
+			std::cout << states[a].name << " " << states[b].name << " 格: ";
+
+			if(!equalVector(states[a].nextOutput, states[b].nextOutput))
+			{
+				incompatible[a][b - a - 1] = true;
+				checkAgain = true;
+				continue;
+			}
+			
 			for(int i = 0; i < State::num; i++) // compare with each pair of output
 			{
 				//std::cout << "\t" << states[a].nextState[i] << " vs " << states[b].nextState[i] << "\n";
@@ -270,6 +282,7 @@ std::vector< std::vector<bool> > checkIncompatible
 					break;
 				}
 			}
+			std::cout << "\n";
 		}
 	}
 	//std::cout << "---------after incom--------\n";
@@ -293,79 +306,8 @@ void StateMinimization()
 	
 
 	// check if incompatible
-	std::vector<std::string> sameOutput; // all[i][0]存k
-	std::vector< std::vector<int> > compatibleState;
-
-	// check states[i] is equal to sameOutput
-	for(int i = 0; i < statesSize; i++)
-	{
-		bool found = false;
-		for(int j = 0; j < compatibleState.size(); j++)
-		{
-			if(equalVector(states[compatibleState[j][0]].nextOutput, states[i].nextOutput))
-			{
-				found = true;
-				compatibleState[j].push_back(i);
-				break;
-			}
-		}
-		if(!found)
-		{
-			std::vector<int> v(1, i);
-			compatibleState.push_back(v);
-		}
-	}
-	
-	// test : print sameOutput
-	for(int i = 0; i < compatibleState.size(); i++)
-	{
-		for(int j = 0; j < states[compatibleState[i][0]].nextOutput.size(); j++)
-			std::cout << states[compatibleState[i][0]].nextOutput[j] <<" ";
-		std::cout << " : ";
-
-		for(int j = 0; j < compatibleState[i].size(); j++)
-			std::cout << states[compatibleState[i][j]].name << " ";
-		std::cout << "\n";
-	}
-
-	//--------------------------------------------------------------------
-	// find incompatible states
-	int min = INT_MAX;
-	for(int i = 0; i < compatibleState.size(); i++)
-	{
-		if(compatibleState[i].size() < min)
-			min = compatibleState[i].size();
-	}
-
-	for(int i = 0; i < compatibleState.size(); i++)
-	{
-		if(compatibleState[i].size() == min)
-		{
-			for(int j = 0; j < min; j++)
-			{
-				//state[ compatibleState[i][j] ] 整排 要畫成黑色
-
-				//刪橫的(row)
-				if(compatibleState[i][j] < statesSize - 1) // not the last one
-				{
-					for(int k = 0; k < incompatible[compatibleState[i][j]].size(); k++)
-					{
-						incompatible[compatibleState[i][j]][k] = true;
-					}
-				}
-				//刪直的
-				for(int k = 0; k < compatibleState[i][j]; k++)
-				{
-					incompatible[k][compatibleState[i][j] - k - 1] = true;
-				}
-			}
-		}
-	}
-
 	incompatible = checkIncompatible(incompatible);
 	
-	std::cout <<"---------------------\n";
-
 	// remove latter state that is not incompatible
 	// a(former state) vs b(latter)
 	for(int a = 0; a < statesSize; a++)
@@ -379,11 +321,10 @@ void StateMinimization()
 
 			if(incompatible[a][b - a - 1] == false)
 			{
-				std::cout <<"remove "<<states[b].name << " -> "<<states[a].name<<"\n";
-				//states[a].removed = false;
-				states[b].removed = true;
-
 				// remove b, change it to a
+				states[b].removed = true;
+				
+				// change others' nextState
 				for(int i = 0; i < states.size(); i++)
 				{
 					for(int j = 0; j < State::num; j++)
@@ -392,10 +333,65 @@ void StateMinimization()
 							states[i].nextState[j] = a;
 					}
 				}
+
+				// change .r(start place)
+				if(r == states[b].name)
+					r = states[a].name;
 			}
+		}
+	}
+	for(int i = 0; i < states.size(); i++)
+	{
+		if(states[i].removed)
+		{
+			statesSize--;
 		}
 	}
 
 	std::cout <<"----end----\n";
 	printStates();
+}
+
+
+void SaveKISS(std::string kissName)
+{
+	std::ofstream kiss(kissName);
+	if (!kiss.is_open())
+	{
+		std::cout << "[ERROR] Cannot open kiss file (to write)\n";
+		return;
+	}
+	//===========================================================================================
+	kiss << ".start_kiss";
+	kiss << "\n.i " << State::num / 2;
+	kiss << "\n.o 1";
+
+	num_p = State::num * statesSize;
+	kiss << "\n.p " << num_p;
+	kiss << "\n.s " << statesSize;
+	kiss << "\n.r " << r;
+	
+	std::string bin[4] = {"00","01","10","11"};
+	if(State::num == 2)
+	{
+		bin[0] = "0";
+		bin[1] = "1";
+	}
+
+	for(int i = 0; i < states.size(); i++)
+	{
+		if(states[i].removed)
+			continue;
+
+		for(int out = 0; out < State::num; out++)
+		{
+			kiss << "\n" << bin[out] << " " <<
+				states[i].name << " " <<
+				states[states[i].nextState[out]].name << " " <<
+				states[i].nextOutput[out];
+		}
+	}
+	kiss << "\n.end_kiss";
+	//===========================================================================================
+	kiss.close();
 }
