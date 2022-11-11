@@ -12,7 +12,7 @@ class State
 public:
 	bool incompatible;
 	std::string name;
-	std::vector<std::string> nextState; // if num_i = 1, there will be 2
+	std::vector<int> nextState; // if num_i = 1, there will be 2
 	std::vector<int> nextOutput;
 
 	State() {
@@ -43,9 +43,10 @@ void printStates()
 {
 	for(int i = 0; i < states.size(); i++)
 	{
+		if(states[i].incompatible) std::cout << "[inc] ";
 		std::cout << states[i].name << " : \n";
 		for(int j = 0; j < State::num; j++)
-			std::cout << "\t" << states[i].nextState[j] << " : " << states[i].nextOutput[j] << "\n";
+			std::cout << "\t" << states[states[i].nextState[j]].name << " " << states[i].nextOutput[j] << "\n";
 	}
 }
 
@@ -96,15 +97,15 @@ int Bin2Dec(int input)
 }
 
 //check if state exists
-int findState(std::string now_state)
+int findState(std::string now_state_name)
 {
 	int i = 0;
 	for(; i < states.size(); i++)
 	{
-		if(states[i].name == now_state)
+		if(states[i].name == now_state_name)
 			return i;
 	}
-	states.push_back(State(now_state));
+	states.push_back(State(now_state_name));
 	return i;
 }
 
@@ -167,9 +168,10 @@ void ProcessKISS(std::ifstream& kiss)
 			{
 				kiss >> i >> now_state >> next_state >> out;
 				i = Bin2Dec(i);
-				int j = findState(now_state);
-				states[j].nextState[i] = next_state;
-				states[j].nextOutput[i] = Bin2Dec(out);
+				int now = findState(now_state);
+				int next = findState(next_state);
+				states[now].nextState[i] = next;
+				states[now].nextOutput[i] = Bin2Dec(out);
 			}
 		}
 
@@ -190,7 +192,11 @@ int pow(int a, int b) // a^b
 bool equalVector(std::vector<int> a, std::vector<int> b)
 {
 	if(a.size() != b.size())
+	{
+		std::cout <<"[ERROR] different size\n";
 		return false;
+	}
+	
 	for(int i = 0; i < a.size(); i++)
 	{
 		if(a[i] != b[i])
@@ -199,9 +205,11 @@ bool equalVector(std::vector<int> a, std::vector<int> b)
 	return true;
 }
 
+
 void StateMinimization()
 {
 	std::cout <<"----StateMinimization----\n";
+
 	bool checkAgain = false;
 	// check if incompatible
 	std::vector<std::string> sameOutput; // all[i][0]存k
@@ -210,43 +218,63 @@ void StateMinimization()
 	// check states[i] is equal to sameOutput
 	for(int i = 0; i < statesSize; i++)
 	{
-		std::string k = "";
-		for(int temp = 0; temp < State::num; temp++)
-		{
-			k += states[i].nextOutput[temp]; // 這裡變成string += int，形質不同
-		}
-
 		bool found = false;
-		for(int j = 0; j < sameOutput.size(); j++)
+		for(int j = 0; j < compatibleState.size(); j++)
 		{
-			if(equalVector(sameOutput[j],states[i].nextOutput)) // sameOutput == k
+			if(equalVector(states[compatibleState[j][0]].nextOutput, states[i].nextOutput))
 			{
 				found = true;
-
 				compatibleState[j].push_back(i);
+				break;
 			}
 		}
 		if(!found)
 		{
 			std::vector<int> v(1, i);
 			compatibleState.push_back(v);
-			sameOutput.push_back(k);
 		}
-		std::cout <<"k = "<<k<<"\n";
 	}
 	
 	// test : print sameOutput
-	for(int i = 0; i < sameOutput.size(); i++)
+	for(int i = 0; i < compatibleState.size(); i++)
 	{
-		std::cout << sameOutput[i] << " : ";
+		for(int j = 0; j <states[compatibleState[i][0]].nextOutput.size(); j++)
+			std::cout << states[compatibleState[i][0]].nextOutput[j] <<" ";
+		std::cout << " : ";
+
 		for(int j = 0; j < compatibleState[i].size(); j++)
-			std::cout << compatibleState[i][j] << " ";
+			std::cout << states[compatibleState[i][j]].name << " ";
 		std::cout << "\n";
 	}
 
+	
+	// find incompatible states
+	int min = INT_MAX;
+	for(int i = 0; i < compatibleState.size(); i++)
+	{
+		if(compatibleState[i].size() < min)
+			min = compatibleState[i].size();
+	}
 
+	for(int i = 0; i < compatibleState.size(); i++)
+	{
+		if(compatibleState[i].size() == min)
+		{
+			for(int j = 0; j < min; j++)
+				states[compatibleState[i][j]].incompatible = true;
+		}
+	}
 
-
+	// build incompatible
+	std::vector< std::vector<bool> > incompatible;
+	incompatible.resize(statesSize);
+	for(int i = 0; i < statesSize; i++)
+	{
+		if(states[i].incompatible)
+			incompatible[i].resize(statesSize - i - 1, true);
+		else
+			incompatible[i].resize(statesSize - i - 1, false);
+	}
 
 	// a(former state) vs b(latter)
 	for(int a = 0; a < statesSize; a++)
@@ -254,6 +282,20 @@ void StateMinimization()
 		for(int b = a + 1; b < statesSize; b++)
 		{
 
+			for(int i = 0; i < State::num; i++) // compare with each pair of output
+			{
+				std::cout << "compare " <<
+					states[states[a].nextState[i]].name << " and " <<
+					states[states[b].nextState[i]].name <<"\n";
+
+				if(	states[states[a].nextState[i]].incompatible || 
+					states[states[b].nextState[i]].incompatible)
+				{
+					states[a].incompatible = true;
+					states[b].incompatible = true;
+					break;
+				}
+			}
 		}
 	}
 
