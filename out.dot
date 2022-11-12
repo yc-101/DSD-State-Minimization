@@ -6,18 +6,17 @@ digraph STG {
 	b [label="b"];
 	d [label="d"];
 	e [label="e"];
+	f [label="f"];
 
-	INIT -> b;
-	a -> a [label="00/0,10/1"];
-	a -> b [label="01/1"];
-	a -> d [label="11/0"];
-	b -> a [label="00/0"];
-	b -> d [label="01/1,10/0"];
-	b -> e [label="11/1"];
-	d -> a [label="00/0,10/1"];
-	d -> b [label="01/1"];
-	d -> d [label="11/1"];
-	e -> d [label="00/0"];
-	e -> a [label="01/0,10/1"];
-	e -> b [label="11/1"];
+	INIT -> a;
+	a -> a [label="0/0"];
+	a -> b [label="1/0"];
+	b -> d [label="0/1"];
+	b -> a [label="1/0"];
+	d -> e [label="0/1"];
+	d -> f [label="1/1"];
+	e -> e [label="0/1"];
+	e -> b [label="1/0"];
+	f -> e [label="0/0"];
+	f -> b [label="1/0"];
 }

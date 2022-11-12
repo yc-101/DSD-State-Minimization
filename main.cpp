@@ -1,7 +1,7 @@
 // Theme:	Project03: State Minimization
 // Name:	B10932017 Yu-Zhen Chang
 // Date: 		2022/10/29
-// Last Update: 2022/11/12 03:53
+// Last Update: 2022/11/12 14:23
 
 #include <iostream>
 #include <fstream>
@@ -270,14 +270,13 @@ void StateMinimization()
 	// remove latter state (b) that is not incompatible,
 	// and change it to the former state (a)
 	//----------------------------------------------------
-	for(int a = 0; a < statesSize; a++)
+	for(int a = 0; a < states.size(); a++)
 	{
 		if(states[a].removed) continue; // 代表已經刪除
 
-		for(int b = a + 1; b < statesSize; b++)
+		for(int b = a + 1; b <  states.size(); b++)
 		{
-			if(states[b].removed)
-				continue;
+			if(states[b].removed) continue;
 
 			if(incompatible[a][b - a - 1] == false)
 			{
@@ -343,6 +342,7 @@ void SaveKISS(std::string kissName)
 		}
 	}
 	kiss << "\n.end_kiss";
+	kiss << "\n";
 	
 	//----------------------------------------------------
 	kiss.close();
@@ -404,5 +404,6 @@ void SaveDOT(std::string dotName)
 	}
 	//----------------------------------------------------
 	dot << "\n}";
+	dot << "\n";
 	dot.close();
 }
