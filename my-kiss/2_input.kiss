@@ -1,0 +1,43 @@
+.start_kiss
+.i 2
+.o 1
+.p 36
+.s 9
+.r b
+00 a e 0
+01 a f 0
+10 a a 0
+11 a f 0
+00 b a 1
+01 b g 1
+10 b c 0
+11 b d 1
+00 c e 1
+01 c g 1
+10 c b 0
+11 c g 1
+00 d c 1
+01 d d 0
+10 d e 0
+11 d c 1
+00 e a 0
+01 e e 0
+10 e f 0
+11 e f 0
+00 f f 0
+01 f a 0
+10 f f 0
+11 f e 0
+00 g c 1
+01 g g 0
+10 g h 0
+11 g b 1
+00 h a 0
+01 h b 0
+10 h c 0
+11 h d 0
+00 i e 1
+01 i g 1
+10 i c 0
+11 i d 1
+.end_kiss

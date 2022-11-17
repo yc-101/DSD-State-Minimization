@@ -1,0 +1,17 @@
+.start_kiss
+.i 1
+.o 1
+.p 10
+.s 5
+.r a_
+0 a_ a_ 0
+1 a_ _b 0
+0 _b a_ 0
+1 _b d 1
+0 d d 1
+1 d f 1
+0 f a_ 1
+1 f a_ 0
+0 g a_ 0
+1 g d 0
+.end_kiss

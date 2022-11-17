@@ -1,0 +1,21 @@
+digraph STG {
+	rankdir=LR;
+
+	INIT [shape=point];
+	a_ [label="a_"];
+	_b [label="_b"];
+	d [label="d"];
+	f [label="f"];
+	g [label="g"];
+
+	INIT -> a_;
+	a_ -> a_ [label="0/0"];
+	a_ -> _b [label="1/0"];
+	_b -> a_ [label="0/0"];
+	_b -> d [label="1/1"];
+	d -> d [label="0/1"];
+	d -> f [label="1/1"];
+	f -> a_ [label="0/1,1/0"];
+	g -> a_ [label="0/0"];
+	g -> d [label="1/0"];
+}

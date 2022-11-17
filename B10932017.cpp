@@ -59,6 +59,8 @@ int main(int argc, char* argv[])
 		else
 		{
 			ProcessKISS(kiss);
+			SaveDOT("input.dot");
+			std::cout << "[MESSAGE] A dot file \"input.dot\" has been generated.\n";
 			StateMinimization();
 			SaveKISS(argv[2]);
 			SaveDOT(argv[3]);
@@ -246,7 +248,7 @@ std::vector< std::vector<bool> > checkIncompatible
 			}
 		}
 	}
-
+	
 	if(checkAgain)
 		return checkIncompatible(incompatible);
 	else
